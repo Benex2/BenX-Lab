@@ -4,7 +4,7 @@
 
 ## 🎯 Overview
 
-BenX Lab is a React Native/Expo-based mobile application designed for Ghanaian students preparing for WASSCE (West African Senior School Certificate Examination). It provides comprehensive study tools, AI tutoring, and an innovative offline-capable learning experience.
+BenX Lab is a React Native/Expo-based mobile application designed for Ghanaian students preparing for WASSCE (West African Senior School Certificate Examination). It provides comprehensive study tools, AI-powered learning assistance, and interactive programming tutorials for tech-focused learners.
 
 ## 🎨 Design System
 
@@ -31,40 +31,73 @@ BenX Lab is a React Native/Expo-based mobile application designed for Ghanaian s
 
 ### 2. **Study Vault**
 - Filterable subject list:
-  - Elective Mathematics
-  - Integrated Science
-  - Physics
-  - Chemistry
-  - Social Studies
+   - Elective Mathematics
+   - Integrated Science
+   - Physics
+   - Chemistry
+   - Social Studies
 - WASSCE past question repository
 - Step-by-step solution logic
 - Marking scheme references
 
-### 3. **Terminal OS**
+### 3. **Programming & Coding Hub** ⭐ NEW
+- **Interactive Code Editor**
+   - Syntax highlighting for multiple languages
+   - Live code execution environment
+   - Real-time error reporting
+   
+- **Programming Tracks**
+   - **Python Fundamentals** — Variables, loops, functions, and data structures
+   - **JavaScript Essentials** — Web development basics and DOM manipulation
+   - **Web Development** — HTML, CSS, and responsive design
+   - **Mobile App Development** — React Native basics
+   - **Data Structures & Algorithms** — Problem-solving techniques
+   - **Database Fundamentals** — SQL and NoSQL concepts
+   
+- **Learning Resources**
+   - Step-by-step tutorials with code examples
+   - Interactive coding challenges
+   - Project-based learning modules
+   - Code snippet library with search
+   
+- **Practice Arena**
+   - Coding challenges with difficulty levels (Beginner → Advanced)
+   - Automated test cases and instant feedback
+   - Leaderboard for competitive learners
+   - Solution explanations and best practices
+   
+- **Code Reference**
+   - Language-specific documentation
+   - Common patterns and idioms
+   - Performance optimization tips
+
+### 4. **Terminal OS**
 - Interactive command-line canvas
 - Linux terminal-style interface
 - System commands: `help`, `status`, `run`, `clear`
 - Real-time command processing
 - System logs output
 
-### 4. **AI Hub**
+### 5. **AI Hub**
 - Multi-model gateway with support for:
-  - DeepSeek-R1
-  - Claude 3.5 Sonnet
-  - Gemini 1.5 Flash
-  - ChatGPT-4o
+   - DeepSeek-R1
+   - Claude 3.5 Sonnet
+   - Gemini 1.5 Flash
+   - ChatGPT-4o
 - Toggle for "Resident Offline AI" mode
 - Markdown code block support
 - Interactive chat interface
 - Quick-prompt chips
+- **AI Code Assistant** — Get help with programming questions
 
-### 5. **Smart Dictionary**
+### 6. **Smart Dictionary**
 - Academic and English vocabulary search
 - Detailed word information:
-  - Word title and phonetics
-  - Definition and example sentences
-  - "WASSCE ESSENTIAL" badge for exam-relevant terms
+   - Word title and phonetics
+   - Definition and example sentences
+   - "WASSCE ESSENTIAL" badge for exam-relevant terms
 - Real-time filtering
+- Programming terminology support
 
 ## 🔧 Technical Stack
 
@@ -76,6 +109,7 @@ BenX Lab is a React Native/Expo-based mobile application designed for Ghanaian s
 - **Updates**: Expo Updates
 - **UI Components**: React Native core + Expo components
 - **Icons**: Expo Vector Icons
+- **Code Execution**: Monaco Editor / CodeSandbox API (optional)
 
 ## 📦 Project Structure
 
@@ -85,14 +119,25 @@ BenX-Lab/
 │   ├── screens/
 │   │   ├── HomeScreen.js
 │   │   ├── StudyVaultScreen.js
+│   │   ├── ProgrammingHubScreen.js      [NEW]
+│   │   ├── CodeEditorScreen.js          [NEW]
+│   │   ├── CodingChallengesScreen.js    [NEW]
 │   │   ├── TerminalScreen.js
 │   │   ├── AIHubScreen.js
 │   │   └── DictionaryScreen.js
 │   ├── components/
-│   │   └── Icons.js
+│   │   ├── Icons.js
+│   │   ├── CodeEditor.js                [NEW]
+│   │   ├── CodeHighlighter.js           [NEW]
+│   │   └── ChallengeCard.js             [NEW]
 │   ├── context/
 │   │   ├── ThemeContext.js
-│   │   └── SubscriptionContext.js
+│   │   ├── SubscriptionContext.js
+│   │   └── ProgressContext.js           [NEW]
+│   ├── services/
+│   │   ├── codeExecutor.js              [NEW]
+│   │   ├── programmingAPI.js            [NEW]
+│   │   └── challengeService.js          [NEW]
 │   └── theme/
 │       ├── colors.js
 │       ├── typography.js
@@ -159,9 +204,9 @@ Paystack payment integration is configured for Ghanaian Mobile Money support:
 - AT Money
 
 Subscription tiers:
-- **Free**: Ad-supported
-- **Premium (GH₵ 10)**: Ad-free + offline study materials
-- **Pro (GH₵ 30)**: All features + priority AI support
+- **Free**: Ad-supported, limited coding challenges
+- **Premium (GH₵ 10)**: Ad-free + offline study materials + 50 coding challenges
+- **Pro (GH₵ 30)**: All features + priority AI support + unlimited challenges + code mentorship
 
 ## 🔄 Auto-Update Handler
 
@@ -182,6 +227,11 @@ The app includes automatic update detection:
 - Manages user subscription tier
 - Handles offline mode toggle
 - Persists subscription data to AsyncStorage
+
+### ProgressContext [NEW]
+- Tracks user coding progress
+- Manages challenge completion status
+- Stores learning milestones
 
 ## 🤝 Contributing
 
