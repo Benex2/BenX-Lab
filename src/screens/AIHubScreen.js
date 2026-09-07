@@ -1,260 +1,394 @@
-import React, { useState } from 'react';
+/**
+ * AI Hub Screen Component
+ * Displays all AI models and handles chat interactions
+ */
+
+import React, { useContext, useState, useRef, useEffect } from 'react';
 import {
   View,
-  ScrollView,
-  StyleSheet,
   Text,
-  SafeAreaView,
+  ScrollView,
   TouchableOpacity,
+  StyleSheet,
   TextInput,
-  Switch,
+  ActivityIndicator,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
-import { useTheme } from '../context/ThemeContext';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { ThemeContext } from '../context/ThemeContext';
+import * as aiModelsService from '../services/aiModelsService';
 
 const AIHubScreen = () => {
-  const { colors, typography, spacing } = useTheme();
-  const [selectedModel, setSelectedModel] = useState('Claude 3.5 Sonnet');
-  const [offlineMode, setOfflineMode] = useState(false);
-  const [messages, setMessages] = useState([
-    { id: 1, type: 'system', text: 'AI Hub Ready. Select a model and start chatting.' },
-  ]);
-  const [input, setInput] = useState('');
+  const { colors, spacing } = useContext(ThemeContext);
+  const [selectedModel, setSelectedModel] = useState('chatgpt');
+  const [messages, setMessages] = useState([]);
+  const [inputText, setInputText] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [availableModels, setAvailableModels] = useState([]);
+  const scrollViewRef = useRef();
 
-  const models = [
-    { id: 1, name: 'DeepSeek-R1', icon: '🧠' },
-    { id: 2, name: 'Claude 3.5 Sonnet', icon: '✨' },
-    { id: 3, name: 'Gemini 1.5 Flash', icon: '⚡' },
-    { id: 4, name: 'ChatGPT-4o', icon: '🤖' },
-  ];
+  useEffect(() => {
+    // Load available models on component mount
+    const models = aiModelsService.getAvailableModels();
+    setAvailableModels(models);
 
-  const handleSendMessage = () => {
-    if (!input.trim()) return;
-
-    const newMessages = [
-      ...messages,
-      { id: messages.length + 1, type: 'user', text: input },
+    // Add welcome message
+    setMessages([
       {
-        id: messages.length + 2,
-        type: 'ai',
-        text: `Response from ${selectedModel}...`,
+        id: '0',
+        type: 'assistant',
+        content: `Welcome to AI Hub! 🤖\n\nYou can chat with multiple AI models:\n• ChatGPT (OpenAI)\n• Gemini (Google)\n• Claude (Anthropic)\n• Grok (xAI)\n• DeepSeek\n\nSelect a model and start asking questions!`,
+        timestamp: new Date(),
       },
-    ];
-    setMessages(newMessages);
-    setInput('');
+    ]);
+  }, []);
+
+  const handleSendMessage = async () => {
+    if (!inputText.trim()) return;
+
+    const userMessage = {
+      id: Date.now().toString(),
+      type: 'user',
+      content: inputText,
+      timestamp: new Date(),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setInputText('');
+    setIsLoading(true);
+
+    try {
+      const result = await aiModelsService.chatWithAI(
+        inputText,
+        selectedModel,
+        messages.map((msg) => ({
+          role: msg.type === 'user' ? 'user' : 'assistant',
+          content: msg.content,
+        }))
+      );
+
+      if (result.success) {
+        const assistantMessage = {
+          id: (Date.now() + 1).toString(),
+          type: 'assistant',
+          content: result.response,
+          model: result.model,
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, assistantMessage]);
+      } else {
+        const errorMessage = {
+          id: (Date.now() + 1).toString(),
+          type: 'error',
+          content: `Error: ${result.error}`,
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, errorMessage]);
+      }
+    } catch (error) {
+      const errorMessage = {
+        id: (Date.now() + 1).toString(),
+        type: 'error',
+        content: `Error: ${error.message}`,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    header: {
-      paddingHorizontal: spacing.md,
-      paddingTop: spacing.md,
-      paddingBottom: spacing.md,
-    },
-    title: {
-      ...typography.h2,
-      color: colors.text,
-      marginBottom: spacing.md,
-    },
-    modelSelector: {
-      marginBottom: spacing.md,
-    },
-    modelLabel: {
-      ...typography.captionBold,
-      color: colors.textSecondary,
-      marginBottom: spacing.sm,
-    },
-    modelGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: spacing.sm,
-    },
-    modelButton: {
-      flex: 1,
-      minWidth: '48%',
-      backgroundColor: colors.cardFill,
-      borderRadius: 8,
-      padding: spacing.sm,
-      borderWidth: 2,
-      alignItems: 'center',
-    },
-    modelButtonActive: {
-      borderColor: colors.primary,
-    },
-    modelButtonInactive: {
-      borderColor: colors.border,
-    },
-    modelIcon: {
-      fontSize: 20,
-      marginBottom: spacing.xs,
-    },
-    modelName: {
-      ...typography.caption,
-      color: colors.text,
-      textAlign: 'center',
-    },
-    offlineModeSection: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      backgroundColor: colors.cardFill,
-      borderRadius: 8,
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.md,
-      borderColor: colors.border,
-      borderWidth: 1,
-    },
-    offlineModeLabel: {
-      ...typography.bodyBold,
-      color: colors.text,
-    },
-    chatContainer: {
-      flex: 1,
-      paddingHorizontal: spacing.md,
-      paddingTop: spacing.md,
-    },
-    messageItem: {
-      marginBottom: spacing.md,
-      maxWidth: '85%',
-    },
-    messageUser: {
-      alignSelf: 'flex-end',
-    },
-    messageAI: {
-      alignSelf: 'flex-start',
-    },
-    messageBubble: {
-      padding: spacing.md,
-      borderRadius: 12,
-    },
-    messageBubbleUser: {
-      backgroundColor: colors.primary,
-    },
-    messageBubbleAI: {
-      backgroundColor: colors.cardFill,
-      borderColor: colors.border,
-      borderWidth: 1,
-    },
-    messageText: {
-      ...typography.body,
-      color: colors.text,
-    },
-    messageTextUser: {
-      color: colors.background,
-    },
-    inputSection: {
-      paddingHorizontal: spacing.md,
-      paddingBottom: spacing.md,
-      flexDirection: 'row',
-      gap: spacing.sm,
-    },
-    input: {
-      flex: 1,
-      ...typography.body,
-      color: colors.text,
-      backgroundColor: colors.cardFill,
-      borderColor: colors.border,
-      borderWidth: 1,
-      borderRadius: 8,
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-    },
-    sendButton: {
-      backgroundColor: colors.secondary,
-      paddingHorizontal: spacing.md,
-      borderRadius: 8,
-      justifyContent: 'center',
-    },
-    sendButtonText: {
-      ...typography.captionBold,
-      color: colors.background,
-    },
-  });
+  const renderMessageBubble = ({ item }) => {
+    const isUser = item.type === 'user';
+    const isError = item.type === 'error';
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>AI Hub</Text>
-
-        <View style={styles.modelSelector}>
-          <Text style={styles.modelLabel}>SELECT MODEL</Text>
-          <View style={styles.modelGrid}>
-            {models.map((model) => (
-              <TouchableOpacity
-                key={model.id}
-                style={[
-                  styles.modelButton,
-                  selectedModel === model.name
-                    ? styles.modelButtonActive
-                    : styles.modelButtonInactive,
-                ]}
-                onPress={() => setSelectedModel(model.name)}
-              >
-                <Text style={styles.modelIcon}>{model.icon}</Text>
-                <Text style={styles.modelName}>{model.name}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        <View style={styles.offlineModeSection}>
-          <Text style={styles.offlineModeLabel}>Resident Offline AI</Text>
-          <Switch
-            value={offlineMode}
-            onValueChange={setOfflineMode}
-            trackColor={{ false: colors.border, true: colors.primary }}
-            thumbColor={offlineMode ? colors.background : colors.textTertiary}
-          />
-        </View>
+    return (
+      <View
+        style={[
+          styles.messageBubble,
+          isUser && styles.userMessage,
+          isError && styles.errorMessage,
+        ]}
+      >
+        <Text
+          style={[
+            styles.messageText,
+            {
+              color: isUser ? colors.background : isError ? '#ff6b6b' : colors.text,
+            },
+          ]}
+        >
+          {item.content}
+        </Text>
+        {item.model && (
+          <Text style={[styles.modelTag, { color: colors.textSecondary }]}>
+            via {item.model.toUpperCase()}
+          </Text>
+        )}
       </View>
+    );
+  };
 
-      <ScrollView style={styles.chatContainer}>
-        {messages.map((msg) => (
-          <View
-            key={msg.id}
+  const ModelSelector = () => (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      style={styles.modelSelector}
+      contentContainerStyle={styles.modelSelectorContent}
+    >
+      {availableModels.map((model) => (
+        <TouchableOpacity
+          key={model.id}
+          style={[
+            styles.modelButton,
+            {
+              backgroundColor:
+                selectedModel === model.id ? colors.primary : colors.cardFill,
+              borderColor:
+                selectedModel === model.id ? colors.primary : colors.textSecondary,
+            },
+          ]}
+          onPress={() => setSelectedModel(model.id)}
+        >
+          <MaterialCommunityIcons
+            name="robot"
+            size={16}
+            color={selectedModel === model.id ? colors.background : colors.text}
+          />
+          <Text
             style={[
-              styles.messageItem,
-              msg.type === 'user' ? styles.messageUser : styles.messageAI,
+              styles.modelButtonText,
+              {
+                color:
+                  selectedModel === model.id ? colors.background : colors.text,
+              },
             ]}
           >
-            <View
-              style={[
-                styles.messageBubble,
-                msg.type === 'user'
-                  ? styles.messageBubbleUser
-                  : styles.messageBubbleAI,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.messageText,
-                  msg.type === 'user' && styles.messageTextUser,
-                ]}
-              >
-                {msg.text}
-              </Text>
-            </View>
-          </View>
-        ))}
-      </ScrollView>
+            {model.name}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </ScrollView>
+  );
 
-      <View style={styles.inputSection}>
+  const ModelInfo = () => {
+    const model = aiModelsService.getModelInfo(selectedModel.toUpperCase());
+    if (!model) return null;
+
+    return (
+      <View style={[styles.modelInfo, { backgroundColor: colors.cardFill }]}>
+        <View style={styles.modelInfoRow}>
+          <Text style={[styles.modelInfoLabel, { color: colors.textSecondary }]}>
+            Model:
+          </Text>
+          <Text style={[styles.modelInfoValue, { color: colors.text }]}>
+            {model.model}
+          </Text>
+        </View>
+        <View style={styles.modelInfoRow}>
+          <Text style={[styles.modelInfoLabel, { color: colors.textSecondary }]}>
+            Provider:
+          </Text>
+          <Text style={[styles.modelInfoValue, { color: colors.text }]}>
+            {model.provider}
+          </Text>
+        </View>
+        <View style={styles.modelInfoRow}>
+          <Text style={[styles.modelInfoLabel, { color: colors.textSecondary }]}>
+            Max Tokens:
+          </Text>
+          <Text style={[styles.modelInfoValue, { color: colors.text }]}>
+            {model.maxTokens}
+          </Text>
+        </View>
+        <Text style={[styles.modelDescription, { color: colors.textSecondary }]}>
+          {model.description}
+        </Text>
+      </View>
+    );
+  };
+
+  return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
+      <View style={styles.header}>
+        <MaterialCommunityIcons name="brain" size={24} color={colors.primary} />
+        <Text style={[styles.title, { color: colors.text }]}>AI Hub</Text>
+      </View>
+
+      <ModelSelector />
+      <ModelInfo />
+
+      <FlatList
+        ref={scrollViewRef}
+        data={messages}
+        renderItem={renderMessageBubble}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.messagesContainer}
+        onContentSizeChange={() => scrollViewRef.current?.scrollToEnd()}
+      />
+
+      <View
+        style={[
+          styles.inputContainer,
+          { backgroundColor: colors.cardFill, borderTopColor: colors.textSecondary },
+        ]}
+      >
         <TextInput
-          style={styles.input}
-          placeholderTextColor={colors.textTertiary}
-          placeholder="Ask anything..."
-          value={input}
-          onChangeText={setInput}
-          onSubmitEditing={handleSendMessage}
+          style={[
+            styles.input,
+            { color: colors.text, borderColor: colors.textSecondary },
+          ]}
+          placeholder="Ask me anything..."
+          placeholderTextColor={colors.textSecondary}
+          value={inputText}
+          onChangeText={setInputText}
+          multiline
+          maxHeight={100}
+          editable={!isLoading}
         />
-        <TouchableOpacity style={styles.sendButton} onPress={handleSendMessage}>
-          <Text style={styles.sendButtonText}>Send</Text>
+        <TouchableOpacity
+          style={[
+            styles.sendButton,
+            { backgroundColor: colors.primary, opacity: isLoading ? 0.5 : 1 },
+          ]}
+          onPress={handleSendMessage}
+          disabled={isLoading || !inputText.trim()}
+        >
+          {isLoading ? (
+            <ActivityIndicator color={colors.background} size="small" />
+          ) : (
+            <MaterialCommunityIcons
+              name="send"
+              size={20}
+              color={colors.background}
+            />
+          )}
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1a1b1e',
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginLeft: 12,
+  },
+  modelSelector: {
+    maxHeight: 60,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1a1b1e',
+  },
+  modelSelectorContent: {
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+  },
+  modelButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginRight: 8,
+    borderWidth: 1,
+  },
+  modelButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 6,
+  },
+  modelInfo: {
+    margin: 12,
+    padding: 12,
+    borderRadius: 8,
+  },
+  modelInfoRow: {
+    flexDirection: 'row',
+    marginBottom: 8,
+  },
+  modelInfoLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    width: '30%',
+  },
+  modelInfoValue: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  modelDescription: {
+    fontSize: 12,
+    marginTop: 8,
+    fontStyle: 'italic',
+  },
+  messagesContainer: {
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+  },
+  messageBubble: {
+    marginBottom: 12,
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: '#1a1b1e',
+    maxWidth: '85%',
+  },
+  userMessage: {
+    alignSelf: 'flex-end',
+    backgroundColor: '#00E676',
+  },
+  errorMessage: {
+    backgroundColor: '#ff6b6b',
+    opacity: 0.8,
+  },
+  messageText: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  modelTag: {
+    fontSize: 10,
+    marginTop: 6,
+    fontStyle: 'italic',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderTopWidth: 1,
+  },
+  input: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    maxHeight: 100,
+    marginRight: 8,
+    fontSize: 14,
+  },
+  sendButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
 
 export default AIHubScreen;
