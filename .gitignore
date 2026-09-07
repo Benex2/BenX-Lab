@@ -1,0 +1,33 @@
+# Expo
+.expo/
+.expo-shared/
+dist/
+npm-debug.*
+
+# Node
+node_modules/
+.pnp
+.pnp.js
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Build
+build/
+.eas/
+
+# Logs
+*.log
+
+# Misc
+.history/
