@@ -11,29 +11,51 @@
       "resizeMode": "contain",
       "backgroundColor": "#0A0B0E"
     },
-    "updates": {
-      "fallbackToCacheTimeout": 0,
-      "url": "https://u.expo.dev/your-update-id"
-    },
     "assetBundlePatterns": [
       "**/*"
     ],
     "ios": {
-      "supportsTabletMode": true
+      "supportsTabletMode": true,
+      "bundleIdentifier": "com.benexlabs.benxlab"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0A0B0E"
       },
-      "package": "com.benx.lab",
-      "versionCode": 1
+      "package": "com.benexlabs.benxlab",
+      "versionCode": 1,
+      "permissions": [
+        "INTERNET",
+        "ACCESS_NETWORK_STATE"
+      ],
+      "useNextNotificationFormat": true
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
+      [
+        "@react-native-async-storage/async-storage",
+        {
+          "newArchEnabled": false
+        }
+      ],
       "expo-updates"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "benx-lab-project"
+      }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/benx-lab-project",
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 30000
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    }
   }
 }
