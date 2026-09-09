@@ -1,21 +1,14 @@
 {
   "expo": {
-    "name": "BenX Lab",
-    "slug": "benx-lab",
+    "name": "BenX-Lab",
+    "slug": "BenX-Lab",
     "version": "1.0.0",
-    "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "dark",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#0A0B0E"
-    },
     "assetBundlePatterns": [
       "**/*"
     ],
     "ios": {
-      "supportsTabletMode": true,
+      "supportsTablet": true,
       "bundleIdentifier": "com.benexlabs.benxlab"
     },
     "android": {
@@ -28,14 +21,23 @@
       "permissions": [
         "INTERNET",
         "ACCESS_NETWORK_STATE"
-      ],
-      "useNextNotificationFormat": true
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-updates"
+      "expo-updates",
+      "expo-font",
+      "expo-status-bar",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff"
+        }
+      ]
     ],
     "extra": {
       "eas": {
@@ -54,3 +56,4 @@
     "owner": "benex2"
   }
 }
+
