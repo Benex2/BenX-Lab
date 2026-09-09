@@ -35,17 +35,11 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      [
-        "@react-native-async-storage/async-storage",
-        {
-          "newArchEnabled": false
-        }
-      ],
       "expo-updates"
     ],
     "extra": {
       "eas": {
-        "projectId": "benx-lab-project"
+        "projectId": "1c50371d-2c35-40cc-beae-e030ddbec21e"
       }
     },
     "updates": {
@@ -56,6 +50,7 @@
     },
     "runtimeVersion": {
       "policy": "appVersion"
-    }
+    },
+    "owner": "benex2"
   }
 }
